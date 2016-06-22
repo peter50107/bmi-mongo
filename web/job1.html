@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Jumbotron Template for Bootstrap</title>
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+  padding-top: 60px;
+  padding-bottom: 20px;
+}
+</style>
+  
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">BMI運算器</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
+          <form name="form1">
+            <input type="text" id="name"  class="form-control"  placeholder="使用者姓名" ><br/>
+            <input type="text" id="high"  class="form-control"  placeholder="身高" ><br/>
+            <input type="text" id="weight"  class="form-control" placeholder="體重" ><br/>
+            <input type="text" id="BMI"  class="form-control"><br/>
+			      <button class="btn btn-lg btn-primary btn-warning" type="button" onclick="key()">結果</button>
+			      <button class="btn btn-lg btn-primary btn-warning" type="submit" onclick="add()">儲存</button>
+            <button class="btn btn-lg btn-primary btn-warning pull=right" type="submit" onclick="remore()">清除</button>
+		  </form>
+      <div><table id="list"></table>
+      </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+      </div>
+      <hr>
+      <footer>
+        <p>☆陳晉偉製作2015/12/1★</p>
+      </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script>
+			var ohigh=document.getElementById("high"); 
+			var oweight=document.getElementById("weight");
+		  var oBMI=document.getElementById("BMI");
+		  var olist=document.getElementById("list");
+      var oname=document.getElementById("name") ;  
+		
+    function  key()
+			{
+				var high=parseFloat(ohigh.value);
+				var weight=parseFloat(oweight.value);
+				var high1=high*high;
+				document.form1.BMI.value=parseInt(weight*100/high1)/100;
+        }
+    	
+		function showList() {
+            var rowHtml = "";
+              for (var name in window.localStorage) {
+              if (name.startsWith ("notepad:")) {
+                   rowHtml += "<tr><td><a onclick=\"loadDoc('"+name+"')\">"+name.substring(8)+"</a></td></tr>"
+                  }
+                }
+                     olist.innerHTML = rowHtml;//這行是多的嗎?//
+              }
+
+		function loadDoc(name) {
+       oname=name.substring(8)
+       var content=window.localStorage.getItem(name);
+       var parts=content.split(":");
+       oBMI=parts[0];
+       ohigh=parts[1];
+       oweight=parts[2];   
+       alert("姓名="+oname+"\n身高="+ohigh+"M"+"\n體重="+oweight+"KG"+"\nBMI="+oBMI);
+         }
+    
+    
+    //function loadDoc(name) {
+        //oname.value = name.substring(8);
+        //oBMI.value  = window.localStorage.getItem(name);
+         //}
+       
+		function save()
+		{
+			var name=oname.value;
+      var BMI=oBMI.value;
+      var high=ohigh.value;
+      var weight=oweight.value;
+      window.localStorage.setItem("notepad:"+name,BMI+":"+high+":"+weight);
+		}
+		
+		function remore()
+		{
+		window.localStorage.clear()	
+		}
+		
+		showList();	
+    
+   // $('.panel').css( "display", "none");
+
+Server = {
+  timeout : 4000
+};
+
+Server.save=function(file, text) {
+  $.ajax({
+    type: "POST",
+    url: "/note/"+file,
+    timeout: this.timeout,
+    data: { text: text }
+  })
+  .done(function(data) {
+    alert( "存檔完成!");
+  })
+  .fail(function() {
+    alert( "存檔失敗！" );
+  });
+}
+
+Server.load=function(file) {
+  return $.ajax({
+    type: "GET",
+    url: "/note/"+file,
+    timeout: this.timeout,
+    data: {}
+  });
+}
+
+function init() {
+  list();
+}
+
+function switchPanel(name) {
+  $('.panel').css( "display", "none");
+  $('#'+name).css( "display", "block");
+}
+
+function list() {                         //顯示原始網頁
+  switchPanel('panelList');
+  $.ajax({
+    type: "GET",
+    url: "/list",
+    timeout: this.timeout,
+    data: {}
+  })
+  .done(function(data) {
+    var notes = JSON.parse(data);
+		$('#panelList').empty();
+		$('#panelList').append("<ol>");
+    for (var i in notes) {
+      $('#panelList').append('<li><a href="javascript:edit(\''+notes[i]._id+'\')">'+notes[i].title+"</a></li>")
+    }
+		$('#panelList').append("</ol>");
+  });
+}
+
+var noteID;
+
+function edit(id) {
+  switchPanel('panelEdit');
+	noteID = id;
+  $.ajax({
+    type: "GET",
+    url: "/note/"+id,
+    timeout: this.timeout,
+    data: {}
+  })
+  .done(function(data) {
+    var note = JSON.parse(data);
+    $('#editTitle').val(note.title);
+    $('#editBody').val(note.body);
+  });
+}
+
+function save() {                         //舊有資料儲存
+   var name = $('#name').val();
+  var high  = $('#high').val();
+  var weigh  = $('#weigh').val();
+  var BMI  = $('#BMI').val();
+  $.ajax({
+    type: "POST",
+    url: "/note/"+noteID,
+    timeout: this.timeout,
+    data: {
+       name:name,
+			high:high,
+      weigh:weigh,
+      BMI:BMI
+    }
+  })
+  .done(function(data) {
+	  alert('存檔完成!');
+	});
+}
+
+function newNote() {             //開啟新的編輯網頁
+  switchPanel('panelNew');
+  $('#editTitle').val('');
+  $('#editBody').val('');
+}
+
+function add() {                  //新網頁的加入
+  var name = $('#name').val();
+  var high  = $('#high').val();
+  var weigh  = $('#weigh').val();
+  var BMI  = $('#BMI').val();
+  $.ajax({
+    type: "POST",
+    url: "/new",
+    timeout: this.timeout,
+    data: {
+      name:name,
+			high:high,
+      weigh:weigh,
+      BMI:BMI
+    }
+  })
+  .done(function(data) {
+	  alert('新增完成!');
+		list();
+	});
+}
+	</script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+ </body>
+</html>
